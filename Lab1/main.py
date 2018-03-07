@@ -2,13 +2,32 @@ from collections import OrderedDict
 from sortedcontainers import SortedDict
 import matplotlib.pyplot as plt
 import numpy as np
+import random as rd
+
+POINTS = [(1, 1, 1), (1, 3, 1), (1, 4, 1), (2, 3, 1), (2, 5, 1), (2, 7, 1), (3, 2, 1), (3, 5, 1), (4.5, 4, 1),
+          (5, 8, 1), (5, 9, 1), (9, 1, 0), (9, 1, 0), (6, 3, 0), (7, 4, 0), (8, 5, 0), (-5, 0, 1), (0, -1, 1), (1, -2, 1),
+          (6, 0, 0), (8, 6, 0), (6, 4, 0), (7, 6, 0), (6.5, 4, 0), (6, -1, 0), (7, 6, 0), (1.5, 3, 1), (2.5, 4, 1),
+          (4, -2, 1), (6, 10, 0), (7, 7, 0), (4, 8, 1), (7, 11, 0)]
+LINES = [(16, 2), (-7, -18), (19, 10), (-10, -9), (10, -6), (-6, -14), (17, 11), (-9, -7), (-8, -12), (-3, -3),
+         (18, -3), (-17, 20), (9, -15), (16, 2), (-5, -15), (-7, 6), (1, 8), (-12, -11), (6, -6), (19, -3),
+         (10, -1), (-3, 1), (14, -16), (17, 13), (19, -3), (17, 6), (3, 15), (-9, -9), (15, 2),
+         (9, 0), (-3, -2), (-18, -18), (-14, 0), (-7, -15), (-1, -4), (-15, -2), (17, -13), (14, -11), (-4, 11),
+         (-17, 20), (14, -1), (0, -11), (-13, 8), (15, 6), (-10, -18), (-6, 11), (20, -3), (16, -2), (14, 8),
+         (-20, -5), (0, -4), (-2, 5), (11, -14), (-14, -20), (19, 11), (-3, -5), (15, 16), (17, 4), (14, -10),
+         (-13, 19), (-11, -8), (-7, 0), (-10, 3), (-18, -11), (-17, -19), (9, -8), (-17, 9), (8, 19), (-14, 15),
+         (11, 12), (-3, -16), (0, 15), (14, 10), (16, 10), (-14, -13), (4, -6), (-3, 19), (-5, 19), (14, -19),
+         (-13, -3), (-5, 16), (-4, -11), (4, 19), (-16, 11), (-10, -6), (-6, 2), (18, 17), (11, -6),
+         (1, 11), (-5, -19), (-17, 19), (17, 9), (7, -1), (-3, 9), (10, -11)]
 
 
-class GenetiveAlgorithm:
+class GeneticAlgorithm:
 
     def fitness(self, points, lines):
         result = {}
+        result_sorted = {}
         for line in lines:
+            if type(line) is list:
+                line = tuple(line)
             correct = 0
             for point in points:
                 if point[1] > line[0] * point[0] + line[1] and point[2] == 1:
@@ -16,13 +35,21 @@ class GenetiveAlgorithm:
                 elif point[1] < line[0] * point[0] + line[1] and point[2] == 0:
                     correct += 1
             result[line] = correct
-        return SortedDict(result)
-        # return result
+
+        best_result = max(result.values())
+        best = list(filter(lambda x: x[1] == best_result, result.items()))
+        best_line = []
+        best_line.append(best[0])
+        for i in best:
+            del result[i[0]]
+        best_result = max(result.values())
+        lst = list(filter(lambda x: x[1] == best_result, result.items()))
+        best_line.append(lst[0])
+        return best_line
 
     def run(self, points, lines):
         result = self.fitness(points, lines)
-        print(result)
-        self.plot(points, result.keys()[-1])
+        self.plot(points, result[0][0])
 
     def plot(self, points, line):
         self.graph(lambda x: x * line[0] + line[1], range(0, 11))
@@ -38,9 +65,107 @@ class GenetiveAlgorithm:
         y = formula(x)
         plt.plot(x, y)
 
+    def mutation(self, number, mutation_variance):
+        mutation_rand = rd.randint(0, 10)
+        number_list = []
+        result = ''
+        for bit in number:
+            if mutation_rand >= mutation_variance:
+                if bit == '0':
+                    number_list.append('1')
+                else:
+                    number_list.append('0')
+            else:
+                number_list.append(bit)
+        for i in number_list:
+            result = result + i
+        return result
+
+    def mutatation_plus_minus(self, plus_minus, mutation_variance):
+        mutation_rand = rd.randint(0, 10)
+        if mutation_rand >= mutation_variance:
+            if plus_minus == '-':
+                plus_minus = ''
+            else:
+                plus_minus = '-'
+        return plus_minus
+
+    def crossover(self, lines_sorted):
+        i = 0
+        result = []
+        mutation_variance = 5
+        for line in lines_sorted:
+            i += 1
+            x1_bin = bin(list(lines_sorted)[49+i][0])
+            y1_bin = bin(list(lines_sorted)[49+i][1])
+            raw_param_bin = [x1_bin, y1_bin]
+            x2_bin = bin(line[0])
+            y2_bin = bin(line[1])
+            raw_param_bin.extend([x2_bin, y2_bin])
+            param_bin = []
+            for param in raw_param_bin:
+                splited = param.split('0b')
+                param_bin.append([splited[1], splited[0], len(splited[1])])
+            for i in range(0, 2):
+                if param_bin[i][2] > param_bin[i+2][2]:
+                    param_bin[i + 2][0] = '0' * (param_bin[i][2] - param_bin[i + 2][2]) + param_bin[i + 2][0]
+                    param_bin[i+2][2] = len(param_bin[i+2][0])
+                else:
+                    param_bin[i][0] = '0' * (param_bin[i+2][2] - param_bin[i][2]) + param_bin[i][0]
+                    param_bin[i][2] = len(param_bin[i][0])
+                cros_int = rd.randint(0, param_bin[i][2])
+                if param_bin[i][1] == '-' and param_bin[i+2][1] == '-':
+                    plus_minus = '-'
+                    plus_minus = self.mutatation_plus_minus(plus_minus, mutation_variance)
+                elif param_bin[i][1] == '' and param_bin[i+2][1] == '-':
+                    plus_minus = '-'
+                    plus_minus = self.mutatation_plus_minus(plus_minus, mutation_variance)
+                elif param_bin[i][1] == '-' and param_bin[i + 2][1] == '':
+                    plus_minus = '-'
+                    plus_minus = self.mutatation_plus_minus(plus_minus, mutation_variance)
+                elif param_bin[i][1] == '' and param_bin[i + 2][1] == '':
+                    plus_minus = ''
+                    plus_minus = self.mutatation_plus_minus(plus_minus, mutation_variance)
+                if i == 0:
+                    abin = param_bin[i][0][:cros_int] + param_bin[i + 2][0][cros_int:]
+                    abin = self.mutation(abin, mutation_variance)
+                    abin = plus_minus + abin
+                    a = int(abin, 2)
+                    result.append([a])
+                else:
+                    bbin = param_bin[i][0][:cros_int] + param_bin[i + 2][0][cros_int:]
+                    bbin = self.mutation(bbin, mutation_variance)
+                    bbin = plus_minus + bbin
+                    b = int(bbin, 2)
+                    result[-1].append(b)
+        return result
+
+
 if __name__ == '__main__':
-    points = [(1, 1, 1), (1, 3, 1), (1, 4, 1), (2, 3, 1), (2, 5, 1), (2, 7, 1), (3, 2, 1), (3, 5, 1), (4.5, 4, 1),
-              (5, 4, 1), (5, 5, 1), (9, 1, 0), (9, 1, 0), (6, 3, 0), (7, 4, 0), (8, 5, 0)]
-    lines = [(1, -1), (-4, -8), (2, -6)]
-    genetive = GenetiveAlgorithm()
-    genetive.run(points, lines)
+    lines = LINES
+    genetic = GeneticAlgorithm()
+    best = genetic.fitness(POINTS, lines)
+    for line in best:
+        if line[0] in lines:
+            lines.remove(line[0])
+        elif list(line[0]) in lines:
+            lines.remove(list(line[0]))
+    print(best, '{} %'.format(best[0][1]/len(POINTS)*100))
+    genetic.run(POINTS, lines)
+
+
+    for i in range(10):
+        lines = genetic.crossover(lines)
+        for i in range(2):
+            lines.append(best[i][0])
+            lines.append(best[i][0])
+        best_new = genetic.fitness(POINTS, lines)
+        if best_new[0][1] > best[0][1]:
+            best = best_new
+            genetic.run(POINTS, lines)
+        for line in best:
+            if line[0] in lines:
+                lines.remove(line[0])
+            elif list(line[0]) in lines:
+                lines.remove(list(line[0]))
+        print(best, '{} %'.format(best[0][1]/len(POINTS)*100))
