@@ -81,21 +81,6 @@ class GeneticAlgorithm:
         plt.axis([-10, 10, -10, 10])
         plt.show()
 
-    def plot(self, points, line):
-        self.graph(lambda x: x * line[0] + line[1], range(0, 11))
-        for point in points:
-            if point[2] == 1:
-                plt.plot([point[0]], [point[1]], 'ro')
-            else:
-                plt.plot([point[0]], [point[1]], 'bo')
-        plt.axis([-5, 15, -10, 15])
-        plt.show()
-
-    def graph(self, formula, x_range):
-        x = np.array(x_range)
-        y = formula(x)
-        plt.plot(x, y)
-
     def mutation(self, number, mutation_variance):
         number_list = []
         result = ''
@@ -225,17 +210,6 @@ if __name__ == '__main__':
         result_percent.append(percent)
         solution_generation.append(generation)
     print(result_percent)
-    # average_percent = int(sum(result_percent)/len(result_percent))
-    # average_generation = int(sum(solution_generation) / len(solution_generation))
-    # print('Average generation of solution: {}, Average percent of solution: {}'.format(average_generation, average_percent))
-    # # genetic = GeneticAlgorithm()
-    # # genetic.plot_4th_degree(POINTS, LINES_4TH_DEGREE[0])
-    # result = []
-    # for i in range(100):
-    #     result.append((rd.randint(-20, 20), rd.randint(-20, 20), rd.randint(-20, 20), rd.randint(-20, 20),
-    #                    rd.randint(-20, 20)))
-    # print(result)
-    # genetic = GeneticAlgorithm()
-    # fitness = genetic.fitness(POINTS, LINES)
-    # print(fitness)
-    # genetic.plot_4th_degree(POINTS, fitness[0][0])
+    average_percent = int(sum(result_percent)/len(result_percent))
+    average_generation = int(sum(solution_generation) / len(solution_generation))
+    print('Average generation of solution: {}, Average percent of solution: {}'.format(average_generation, average_percent))

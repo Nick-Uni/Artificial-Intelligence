@@ -215,5 +215,3 @@ if __name__ == '__main__':
     average_percent = int(sum(result_percent)/len(result_percent))
     average_generation = int(sum(solution_generation) / len(solution_generation))
     print('Average generation of solution: {}, Average percent of solution: {}'.format(average_generation, average_percent))
-    # genetic = GeneticAlgorithm()
-    # genetic.plot_4th_degree(POINTS, LINES_4TH_DEGREE[0])
