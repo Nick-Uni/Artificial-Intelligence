@@ -17,14 +17,16 @@ LINES = [(16, 2), (-7, -18), (19, 10), (-10, -9), (10, -6), (-6, -14), (17, 11),
          (-13, 19), (-11, -8), (-7, 0), (-10, 3), (-18, -11), (-17, -19), (9, -8), (-17, 9), (8, 19), (-14, 15),
          (11, 12), (-3, -16), (0, 15), (14, 10), (16, 10), (-14, -13), (4, -6), (-3, 19), (-5, 19), (14, -19),
          (-13, -3), (-5, 16), (-4, -11), (4, 19), (-16, 11), (-10, -6), (-6, 2), (18, 17), (11, -6),
-         (1, 11), (-5, -19), (-17, 19), (17, 9), (7, -1), (-3, 9), (10, -11)]
+         (1, 11), (-5, -19), (-17, 19), (17, 9), (7, -1), (-3, 9), (10, -11), (4, 5), (40, 30), (-2, 5), (4, 15),
+         (6, 1), (5, 4), (10, -14)]
+
+LINES_4TH_DEGREE = [(1, 1, 1, 1, 1)]
 
 
 class GeneticAlgorithm:
 
     def fitness(self, points, lines):
         result = {}
-        result_sorted = {}
         for line in lines:
             if type(line) is list:
                 line = tuple(line)
@@ -51,6 +53,21 @@ class GeneticAlgorithm:
         result = self.fitness(points, lines)
         self.plot(points, result[0][0])
 
+    def graph_4th_degree(self, formula, x_range):
+        x = np.array(x_range)
+        y = formula(x)
+        plt.plot(x, y)
+
+    def plot_4th_degree(self, points, line):
+        self.graph_4th_degree(lambda x: line[0] * (x-line[4])**3 + line[1] * (x-line[4])**2 + line[2] * (x-line[2]) + line[3], range(-10, 10))
+        for point in points:
+            if point[2] == 1:
+                plt.plot([point[0]], [point[1]], 'ro')
+            else:
+                plt.plot([point[0]], [point[1]], 'bo')
+        plt.axis([-5, 10, -10, 15])
+        plt.show()
+
     def plot(self, points, line):
         self.graph(lambda x: x * line[0] + line[1], range(0, 11))
         for point in points:
@@ -58,6 +75,7 @@ class GeneticAlgorithm:
                 plt.plot([point[0]], [point[1]], 'ro')
             else:
                 plt.plot([point[0]], [point[1]], 'bo')
+        plt.axis([-5, 15, -10, 15])
         plt.show()
 
     def graph(self, formula, x_range):
@@ -66,10 +84,10 @@ class GeneticAlgorithm:
         plt.plot(x, y)
 
     def mutation(self, number, mutation_variance):
-        mutation_rand = rd.randint(0, 10)
         number_list = []
         result = ''
         for bit in number:
+            mutation_rand = rd.randint(0, 100)
             if mutation_rand >= mutation_variance:
                 if bit == '0':
                     number_list.append('1')
@@ -81,8 +99,16 @@ class GeneticAlgorithm:
             result = result + i
         return result
 
-    def mutatation_plus_minus(self, plus_minus, mutation_variance):
-        mutation_rand = rd.randint(0, 10)
+    def mutatation_plus_minus(self, x1, x2, mutation_variance):
+        if x1 == '-' and x2 == '-':
+            plus_minus = ''
+        elif x1 == '' and x2 == '-':
+            plus_minus = '-'
+        elif x1 == '-' and x2 == '':
+            plus_minus = '-'
+        else:
+            plus_minus = ''
+        mutation_rand = rd.randint(0, 100)
         if mutation_rand >= mutation_variance:
             if plus_minus == '-':
                 plus_minus = ''
@@ -91,16 +117,34 @@ class GeneticAlgorithm:
         return plus_minus
 
     def crossover(self, lines_sorted):
-        i = 0
+        # print(len(lines_sorted), 'parasha')
+        # print(lines_sorted)
         result = []
-        mutation_variance = 5
-        for line in lines_sorted:
-            i += 1
-            x1_bin = bin(list(lines_sorted)[49+i][0])
-            y1_bin = bin(list(lines_sorted)[49+i][1])
+        mutation_variance = 50
+        values = []
+        for line in range(int(len(lines_sorted)/2)):
+            random_1 = rd.randint(0, 99)
+            random_2 = rd.randint(0, 99)
+            values.append(random_1)
+            values.append(random_2)
+            while random_1 in values:
+                random_1 = rd.randint(0, 99)
+            while random_2 in values:
+                random_2 = rd.randint(0, 99)
+
+            try:
+                x1_bin = bin(list(lines_sorted)[random_1][0])
+            except IndexError:
+                pass
+                # print(random_1, 'pizda')
+            y1_bin = bin(list(lines_sorted)[random_1][1])
             raw_param_bin = [x1_bin, y1_bin]
-            x2_bin = bin(line[0])
-            y2_bin = bin(line[1])
+            try:
+                x2_bin = bin(list(lines_sorted)[random_2][0])
+            except IndexError:
+                pass
+                # print(random_2, 'o4ko')
+            y2_bin = bin(list(lines_sorted)[random_2][1])
             raw_param_bin.extend([x2_bin, y2_bin])
             param_bin = []
             for param in raw_param_bin:
@@ -113,36 +157,32 @@ class GeneticAlgorithm:
                 else:
                     param_bin[i][0] = '0' * (param_bin[i+2][2] - param_bin[i][2]) + param_bin[i][0]
                     param_bin[i][2] = len(param_bin[i][0])
-                cros_int = rd.randint(0, param_bin[i][2])
-                if param_bin[i][1] == '-' and param_bin[i+2][1] == '-':
-                    plus_minus = '-'
-                    plus_minus = self.mutatation_plus_minus(plus_minus, mutation_variance)
-                elif param_bin[i][1] == '' and param_bin[i+2][1] == '-':
-                    plus_minus = '-'
-                    plus_minus = self.mutatation_plus_minus(plus_minus, mutation_variance)
-                elif param_bin[i][1] == '-' and param_bin[i + 2][1] == '':
-                    plus_minus = '-'
-                    plus_minus = self.mutatation_plus_minus(plus_minus, mutation_variance)
-                elif param_bin[i][1] == '' and param_bin[i + 2][1] == '':
-                    plus_minus = ''
-                    plus_minus = self.mutatation_plus_minus(plus_minus, mutation_variance)
+                cros_int = int(0.5 * param_bin[i][2])
+                plus_minus = self.mutatation_plus_minus(param_bin[i][1], param_bin[i+2][1], mutation_variance)
+                a_bin = param_bin[i][0][:cros_int] + param_bin[i + 2][0][cros_int:]
+                a_bin = self.mutation(a_bin, mutation_variance)
+                a_bin = plus_minus + a_bin
+                b_bin = param_bin[i + 2][0][:cros_int] + param_bin[i][0][cros_int:]
+                b_bin = self.mutation(b_bin, mutation_variance)
+                b_bin = plus_minus + b_bin
+                a = int(a_bin, 2)
+                b = int(b_bin, 2)
+
                 if i == 0:
-                    abin = param_bin[i][0][:cros_int] + param_bin[i + 2][0][cros_int:]
-                    abin = self.mutation(abin, mutation_variance)
-                    abin = plus_minus + abin
-                    a = int(abin, 2)
-                    result.append([a])
+                    bbbb = result
+                    bbbb.append([a])
+                    bbbb.append([b])
                 else:
-                    bbin = param_bin[i][0][:cros_int] + param_bin[i + 2][0][cros_int:]
-                    bbin = self.mutation(bbin, mutation_variance)
-                    bbin = plus_minus + bbin
-                    b = int(bbin, 2)
-                    result[-1].append(b)
+                    bbbb = result[-1]
+                    bbbb.append(b)
+                    bbbb = result[-2]
+                    bbbb.append(a)
+        # print(len(result))
         return result
 
 
-if __name__ == '__main__':
-    lines = LINES
+def start(lines):
+    lines = lines.copy()
     genetic = GeneticAlgorithm()
     best = genetic.fitness(POINTS, lines)
     for line in best:
@@ -150,22 +190,38 @@ if __name__ == '__main__':
             lines.remove(line[0])
         elif list(line[0]) in lines:
             lines.remove(list(line[0]))
-    print(best, '{} %'.format(best[0][1]/len(POINTS)*100))
-    genetic.run(POINTS, lines)
-
-
-    for i in range(10):
+    # print(best, '{} %'.format(best[0][1]/len(POINTS)*100))
+    # genetic.run(POINTS, lines)
+    for i in range(1, 101):
         lines = genetic.crossover(lines)
-        for i in range(2):
-            lines.append(best[i][0])
-            lines.append(best[i][0])
+        for j in range(2):
+            lines.append(best[j][0])
         best_new = genetic.fitness(POINTS, lines)
         if best_new[0][1] > best[0][1]:
             best = best_new
-            genetic.run(POINTS, lines)
+            solution = i
+            # genetic.run(POINTS, lines)
         for line in best:
             if line[0] in lines:
                 lines.remove(line[0])
             elif list(line[0]) in lines:
                 lines.remove(list(line[0]))
-        print(best, '{} %'.format(best[0][1]/len(POINTS)*100))
+        if best[0][1]/len(POINTS) == 1:
+            break
+    percent = best[0][1] / len(POINTS) * 100
+    print(best, '{} %, {} generation'.format(percent, solution))
+    return percent, solution
+
+if __name__ == '__main__':
+    # solution_generation = []
+    # result_percent = []
+    # for i in range(1000):
+    #     percent, generation = start(LINES)
+    #     result_percent.append(percent)
+    #     solution_generation.append(generation)
+    # print(result_percent)
+    # average_percent = int(sum(result_percent)/len(result_percent))
+    # average_generation = int(sum(solution_generation) / len(solution_generation))
+    # print('Average generation of solution: {}, Average percent of solution: {}'.format(average_generation, average_percent))
+    genetic = GeneticAlgorithm()
+    genetic.plot_4th_degree(POINTS, LINES_4TH_DEGREE[0])
