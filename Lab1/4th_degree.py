@@ -1,13 +1,15 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import random as rd
+import time
 
-POINTS = [(1, 1, 1), (1, 3, 1), (1, 4, 1), (2, 3, 1), (2, 5, 1), (2, 7, 1), (3, 2, 1), (3, 5, 1), (4.5, 4, 1),
-          (5, 8, 1), (5, 9, 1), (9, 1, 0), (9, 1, 0), (6, 3, 0), (7, 4, 0), (8, 5, 0), (0, -1, 1), (1, -2, 1),
-          (6, 0, 0), (8, 6, 0), (6, 4, 0), (7, 6, 0), (6.5, 4, 0), (6, -1, 0), (7, 6, 0), (1.5, 3, 1), (2.5, 4, 1),
-          (4, -2, 1), (6, 10, 0), (7, 7, 0), (4, 8, 1), (7, 11, 0), (2.5, -2.5, 1), (3, 0, 1), (4.9, 2.4, 0), (6, 4, 0),
-          (4.8, -5, 0), (3, -6, 0), (6, -2.5, 0), (6, 5, 0), (5, -2.5, 0), (1, 0, 1), (2, 1, 1), (2, 6, 1), (0, -2.5, 1),
-          (3, -7.5, 0), (5.1, 0.1, 0)]
+POINTS = [(2, 7, 1), (4.5, 4, 1), (2, -6, 0), (6, 10, 0), (1, 3, 1), (1.5, 3, 1), (5.2, 2.4, 0), (1, 0, 1), (6, 0, 0),
+           (8, 6, 0), (3.6, -4.8, 0), (6, -1, 0), (6, -2.5, 0), (2.5, 4, 1), (5, 8, 1), (5, -2.5, 0), (2, 3, 1),
+           (5.1, 0.1, 0), (1.5, -5, 1), (7, 4, 0), (1, 4, 1), (6, 4, 0), (6.5, 4, 0), (7, 11, 0), (9, 1, 0),
+           (3.75, -4, 1), (1.8, -3, 1), (2.3, -3, 1), (2.5, -4.3, 0), (3, 2, 1), (4.8, -5, 0), (2, 6, 1), (0, -1, 1),
+           (2, 5, 1), (0, -2.5, 1), (7, 7, 0), (6, 5, 0), (4, 8, 1), (1, -6, 1), (1, 1, 1), (3, 5, 1), (4, -3, 1),
+           (2.5, -2.5, 1), (5, 9, 1), (3, -6, 0), (6, 3, 0), (2, 1, 1), (8, 5, 0), (3, -7.5, 0), (3.5, -3.1, 1),
+          (1, -2, 1), (7, 6, 0), (3, 0, 1), (4, -2, 1)]
 
 LINES = [(20, 8, 8, 12, -10), (-8, -15, -12, 0, -18), (10, 0, -15, -11, -6), (-6, 16, 19, -20, 14),
          (11, 18, 3, 17, -14), (-20, -14, -6, 20, -17), (-19, 9, 2, -11, -7), (14, 7, -12, -9, -1),
@@ -62,17 +64,11 @@ class GeneticAlgorithm:
         best_line.append(lst[0])
         return best_line
 
-    def run(self, points, lines):
-        result = self.fitness(points, lines)
-        self.plot_4th_degree(points, result[0][0])
-
-    def graph_4th_degree(self, formula, x_range):
-        x = np.array(x_range)
+    def plot(self, points, line):
+        formula = (lambda x: line[0] * (x-line[4])**3 + line[1] * (x-line[4])**2 + line[2] * (x-line[2]) + line[3])
+        x = np.linspace(-10, 10, 1000)
         y = formula(x)
         plt.plot(x, y)
-
-    def plot_4th_degree(self, points, line):
-        self.graph_4th_degree(lambda x: line[0] * (x-line[4])**3 + line[1] * (x-line[4])**2 + line[2] * (x-line[2]) + line[3], range(-10, 10))
         for point in points:
             if point[2] == 1:
                 plt.plot([point[0]], [point[1]], 'ro')
@@ -171,6 +167,7 @@ class GeneticAlgorithm:
 
 
 def start(lines):
+    start = time.time()
     lines = lines.copy()
     genetic = GeneticAlgorithm()
     best = genetic.fitness(POINTS, lines)
@@ -181,7 +178,7 @@ def start(lines):
             lines.remove(list(line[0]))
     # print(best, '{} %'.format(best[0][1]/len(POINTS)*100))
     # genetic.run(POINTS, lines)
-    for i in range(1, 101):
+    for i in range(1, 151):
         lines = genetic.crossover(lines)
         for j in range(2):
             lines.append(best[j][0])
@@ -199,17 +196,29 @@ def start(lines):
             break
     percent = best[0][1] / len(POINTS) * 100
     print(best, '{} %, {} generation'.format(percent, solution))
-    genetic.run(POINTS, lines)
+    genetic.plot(POINTS, best[0][0])
+    finish = time.time()
+    print(finish - start)
     return percent, solution
 
 if __name__ == '__main__':
-    solution_generation = []
-    result_percent = []
-    for i in range(1000):
-        percent, generation = start(LINES)
-        result_percent.append(percent)
-        solution_generation.append(generation)
-    print(result_percent)
-    average_percent = int(sum(result_percent)/len(result_percent))
-    average_generation = int(sum(solution_generation) / len(solution_generation))
-    print('Average generation of solution: {}, Average percent of solution: {}'.format(average_generation, average_percent))
+    # solution_generation = []
+    # result_percent = []
+    # for i in range(10):
+    #     percent, generation = start(LINES)
+    #     result_percent.append(percent)
+    #     solution_generation.append(generation)
+    # print(result_percent)
+    # average_percent = int(sum(result_percent)/len(result_percent))
+    # average_generation = int(sum(solution_generation) / len(solution_generation))
+    # print('Average generation of solution: {}, Average percent of solution: {}'.format(average_generation, average_percent))
+
+    print(len(POINTS))
+    positive = 0
+    negative = 0
+    for i in POINTS:
+        if i[2] == 1:
+            positive += 1
+        else:
+            negative += 1
+    print(positive, negative)

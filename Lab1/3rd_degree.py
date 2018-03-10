@@ -171,6 +171,7 @@ class GeneticAlgorithm:
 def start(lines):
     lines = lines.copy()
     lines = lines[:50]
+    start = time.time()
     genetic = GeneticAlgorithm()
     best = genetic.fitness(POINTS, lines)
     for line in best:

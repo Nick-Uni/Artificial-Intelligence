@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import random as rd
+import time
 
 POINTS = [(1, 1, 1), (1, 3, 1), (1, 4, 1), (2, 3, 1), (2, 5, 1), (2, 7, 1), (3, 2, 1), (3, 5, 1), (4.5, 4, 1),
           (5, 8, 1), (5, 9, 1), (9, 1, 0), (9, 1, 0), (6, 3, 0), (7, 4, 0), (8, 5, 0), (0, -1, 1), (1, -2, 1),
@@ -148,6 +149,7 @@ class GeneticAlgorithm:
 
 
 def start(lines):
+    start = time.time()
     lines = lines.copy()
     genetic = GeneticAlgorithm()
     best = genetic.fitness(POINTS, lines)
@@ -176,6 +178,8 @@ def start(lines):
             break
     percent = best[0][1] / len(POINTS) * 100
     genetic.plot(POINTS, best[0][0])
+    finish = time.time()
+    print(finish - start)
     print(best, '{} %, {} generation'.format(percent, solution))
     return percent, solution
 
