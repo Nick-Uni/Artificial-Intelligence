@@ -119,8 +119,8 @@ class GeneticAlgorithm:
         mutation_variance = 50
         values = []
         for line in range(int(len(lines_sorted)/2)):
-            random_1 = rd.randint(0, 97)
-            random_2 = rd.randint(0, 97)
+            random_1 = rd.randint(0, len(lines_sorted)-1)
+            random_2 = rd.randint(0, len(lines_sorted)-1)
             while random_1 in values:
                 random_1 = rd.randint(0, len(lines_sorted)-1)
             while random_2 in values:
